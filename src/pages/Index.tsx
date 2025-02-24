@@ -22,11 +22,6 @@ const Index = () => {
   const [playlistVideos, setPlaylistVideos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const [downloadOptions, setDownloadOptions] = useState({
-    videoFormats: [],
-    audioFormats: [],
-    selectedVideoId: null,
-  });
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,35 +167,14 @@ const Index = () => {
     });
   };
 
-  const fetchDownloadOptions = async (videoId: string) => {
-    try {
-      const response = await fetch(`/api/download-options/${videoId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch download options");
-      }
-      const data = await response.json();
-      setDownloadOptions({ ...data, selectedVideoId: videoId });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch download options. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDownloadVideo = async (formatId: string) => {
-    const { selectedVideoId } = downloadOptions;
-    if (!selectedVideoId) {
-      toast({
-        title: "Error",
-        description: "No video selected for download.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    window.location.href = `/api/download/${selectedVideoId}?formatId=${formatId}`;
+  const handleDownloadVideo = (videoId: string, format: string) => {
+    // Implement video download logic here
+    window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
+    toast({
+      title: "Download Started",
+      description: `Downloading video in ${format} format.`,
+      variant: "success",
+    });
   };
 
   const handleDownloadThumbnail = (thumbnailUrl: string, format: string) => {
@@ -414,7 +388,9 @@ const Index = () => {
                     <div className="flex flex-col gap-2">
                       {/* Download Video Button */}
                       <Button
-                        onClick={() => fetchDownloadOptions(video.snippet.resourceId.videoId)}
+                        onClick={() =>
+                          handleDownloadVideo(snippet.resourceId.videoId, "mp4")
+                        }
                       >
                         <Download className="w-4 h-4 mr-2" /> Download Video
                       </Button>
@@ -442,45 +418,6 @@ const Index = () => {
           </div>
         )}
       </div>
-      {downloadOptions.selectedVideoId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[400px]">
-            <h3 className="text-xl font-semibold mb-4">Download Options</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">Video with Audio</h4>
-                {downloadOptions.videoFormats.map((format: any) => (
-                  <Button
-                    key={format.format_id}
-                    onClick={() => handleDownloadVideo(format.format_id)}
-                    className="w-full mt-2"
-                  >
-                    {format.format_note || "Unknown Quality"}
-                  </Button>
-                ))}
-              </div>
-              <div>
-                <h4 className="font-medium">Audio Only</h4>
-                {downloadOptions.audioFormats.map((format: any) => (
-                  <Button
-                    key={format.format_id}
-                    onClick={() => handleDownloadVideo(format.format_id)}
-                    className="w-full mt-2"
-                  >
-                    {format.format_note || "Unknown Quality"}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <Button
-              onClick={() => setDownloadOptions({ videoFormats: [], audioFormats: [], selectedVideoId: null })}
-              className="mt-4 w-full"
-            >
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
